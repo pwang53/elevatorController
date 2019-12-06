@@ -89,7 +89,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
     while(waiting) {
     	//make the passenger wait for the door to open
     	//and lock the elevator until it is taken by the passenger
-    	//pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
+    	pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
         pthread_mutex_lock(&Elevator_Number[elevator_passenger_take].lock);
 
 		//once it is taken by the passenger, let the passenger enter it and bring to the destination
@@ -104,7 +104,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
 		
 		//after the passenger getting in, unlock and keep to wait for door next needed to open
         pthread_mutex_unlock(&Elevator_Number[elevator_passenger_take].lock);
-        //pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
+        pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
     }
 
     // wait for the elevator at our destination floor, then get out
@@ -112,7 +112,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
     while(riding) {
     	//make the passenger wait for the door to open
     	//and lock the elevator until it is taken by the passenger
-    	//pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
+    	pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
         pthread_mutex_lock(&Elevator_Number[elevator_passenger_take].lock);
         
         //once if the current floor arrive the distination and the door is open, let the passenger out
@@ -127,7 +127,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
 
     	//after the passenger getting out, unlock and keep waiting for door next needed to open
         pthread_mutex_unlock(&Elevator_Number[elevator_passenger_take].lock);
-        //pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
+        pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
     }
 }
 
@@ -149,13 +149,13 @@ void elevator_ready(int elevator, int at_floor,
         //keep the door open and give the user time to step in
         //and then unlock the elevator return
         pthread_mutex_unlock(&Elevator_Number[elevator].lock);
-        //pthread_barrier_wait(&Elevator_Number[elevator].barrier);  
+        pthread_barrier_wait(&Elevator_Number[elevator].barrier);  
         
 		return;
     }
     else if(Elevator_Number[elevator].state == ELEVATOR_OPEN) {
     	//before close, double check to allow the user have enough time to step in
-        //pthread_barrier_wait(&Elevator_Number[elevator].barrier);  
+        pthread_barrier_wait(&Elevator_Number[elevator].barrier);  
         
         //when the state is OPEN, then close the door and change the state to close
 	    door_close(elevator);
