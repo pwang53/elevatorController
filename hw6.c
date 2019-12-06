@@ -11,7 +11,6 @@
 
 #include "hw6.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include<pthread.h>
 
 //pthread_barrier_t barrier;
@@ -42,6 +41,7 @@ static struct Passenger
 } Passenger_Information[PASSENGERS];
 
 void scheduler_init() {	
+	//use two loop to initialize both passenger and elevator
 	for(int i = 0; i < ELEVATORS; i++){
 		for(int j = 0; j < PASSENGERS; j++){	
     	//initialize all elevators
@@ -51,7 +51,7 @@ void scheduler_init() {
     	Elevator_Number[i].state=ELEVATOR_ARRIVED;
     	Elevator_Number[i].destination=-1;	//initialize destination as -1 means it is ready to be used
 		pthread_mutex_init(&Elevator_Number[i].lock,0);
-    	pthread_barrier_init(&Elevator_Number[i].barrier, 0, 1);
+    	pthread_barrier_init(&Elevator_Number[i].barrier, 0, 2);
 	
 		//initialize all passangers
 		//When the there has a passange in the elevator, it is used to lock next passanger
@@ -62,7 +62,7 @@ void scheduler_init() {
 	
 }
 
-//Global Variable: get the number of total passenger 
+//Global Variable: get the number of total passenger
 int total_passenger = 0;
 
 void passenger_request(int passenger, int from_floor, int to_floor, 
@@ -71,7 +71,7 @@ void passenger_request(int passenger, int from_floor, int to_floor,
 {	
 	//check how many passenger request the 
 	if (total_passenger <= passenger)	total_passenger = passenger;
-		
+	
 	//initialize the request infromation from the specific passenger
 	Passenger_Information[passenger].from_floor = from_floor;
 	Passenger_Information[passenger].to_floor = to_floor;
@@ -83,33 +83,30 @@ void passenger_request(int passenger, int from_floor, int to_floor,
 	
 	//after get the information, get the number of elevator that this passenger take
 	int elevator_passenger_take = Passenger_Information[passenger].elevator_passenger_take;
-
-    // wait for the elevator to arrive at our origin floor, then get in
-    int waiting = 1;
-    while(waiting) {
+	
+    	// wait for the elevator to arrive at our origin floor, then get in
     	//make the passenger wait for the door to open
     	//and lock the elevator until it is taken by the passenger
     	pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
         pthread_mutex_lock(&Elevator_Number[elevator_passenger_take].lock);
 
-		//once it is taken by the passenger, let the passenger enter it and bring to the destination
+	//once it is taken by the passenger, let the passenger enter it and bring to the destination
         if(Elevator_Number[elevator_passenger_take].current_floor == from_floor 
 			&& Elevator_Number[elevator_passenger_take].state == ELEVATOR_OPEN 
 			&& Elevator_Number[elevator_passenger_take].occupancy==0) {
             enter(passenger, elevator_passenger_take);
             Elevator_Number[elevator_passenger_take].occupancy++;
             Elevator_Number[elevator_passenger_take].destination = Passenger_Information[passenger].to_floor;
-			waiting=0;
+			
         }
 		
-		//after the passenger getting in, unlock and keep to wait for door next needed to open
+	//after the passenger getting in, unlock and keep to wait for door next needed to open
         pthread_mutex_unlock(&Elevator_Number[elevator_passenger_take].lock);
         pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
-    }
+    
 
     // wait for the elevator at our destination floor, then get out
-    int riding=1;
-    while(riding) {
+
     	//make the passenger wait for the door to open
     	//and lock the elevator until it is taken by the passenger
     	pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
@@ -122,13 +119,13 @@ void passenger_request(int passenger, int from_floor, int to_floor,
             exit(passenger, elevator_passenger_take);
             Elevator_Number[elevator_passenger_take].occupancy--;
             Elevator_Number[elevator_passenger_take].destination = -1;
-            riding=0;
+    
         }
 
     	//after the passenger getting out, unlock and keep waiting for door next needed to open
         pthread_mutex_unlock(&Elevator_Number[elevator_passenger_take].lock);
         pthread_barrier_wait(&Elevator_Number[elevator_passenger_take].barrier);
-    }
+    
 }
 
 
