@@ -51,7 +51,7 @@ void scheduler_init() {
     	Elevator_Number[i].state=ELEVATOR_ARRIVED;
     	Elevator_Number[i].destination=-1;	//initialize destination as -1 means it is ready to be used
 		pthread_mutex_init(&Elevator_Number[i].lock,0);
-    	pthread_barrier_init(&Elevator_Number[i].barrier, 0, 2);
+    	pthread_barrier_init(&Elevator_Number[i].barrier, 0, 1);
 	
 		//initialize all passangers
 		//When the there has a passange in the elevator, it is used to lock next passanger
